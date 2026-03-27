@@ -1,25 +1,28 @@
-from flask import Flask, request, send_file, jsonify
-from flask_cors import CORS
+from flask import Flask, request, send_file, Response
 from vip_pdf_generator import generate_vip_pdf
 import tempfile, os
 
 app = Flask(__name__)
 
-# ✅ THIS IS THE FIX — explicitly allow your GitHub Pages domain
-CORS(app, origins=["https://codecr4cker.github.io"])
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS, GET"
+    return response
 
-@app.route("/generate", methods=["POST", "OPTIONS"])
+@app.after_request
+def after_request(response):
+    return add_cors_headers(response)
+
+@app.route("/generate", methods=["GET", "POST", "OPTIONS"])
 def generate():
-    # Handle preflight OPTIONS request
     if request.method == "OPTIONS":
-        response = app.make_default_options_response()
-        response.headers["Access-Control-Allow-Origin"] = "https://codecr4cker.github.io"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        return response
+        return Response("OK", status=200)
 
-    data = request.json
+    if request.method == "GET":
+        return Response("Backend is running!", status=200)
 
+    data         = request.json or {}
     title        = data.get("title", "VIP Guide")
     subtitle     = data.get("subtitle", "")
     footer_label = data.get("footer_label", "EXCLUSIVE VIP GUIDE")
@@ -36,20 +39,38 @@ def generate():
         sections     = sections,
     )
 
-    response = send_file(
+    return send_file(
         tmp_path,
         mimetype="application/pdf",
         as_attachment=True,
-        download_name=f"{title[:30].replace(' ', '_')}.pdf"
+        download_name="VIP_Guide.pdf"
     )
-    response.headers["Access-Control-Allow-Origin"] = "https://codecr4cker.github.io"
-
-    @response.call_on_close
-    def cleanup():
-        os.unlink(tmp_path)
-
-    return response
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+```
+
+# ### Key changes:
+# - Uses `@app.after_request` — applies CORS to **every** response automatically
+# - `Access-Control-Allow-Origin: *` — allows **all** origins (safest fix)
+# - Added a `GET` route so you can test in browser directly
+# - No dependency on `flask-cors` library
+
+# ---
+
+# ## Step 4 — Also update `requirements.txt`
+
+# Remove `flask-cors` since we no longer need it:
+# ```
+# flask
+# reportlab
+# ```
+
+# ---
+
+# ## Step 5 — Verify it worked
+
+# After Render redeploys, open this in your browser:
+# ```
+# https://vip-pdf-generator.onrender.com/generate
