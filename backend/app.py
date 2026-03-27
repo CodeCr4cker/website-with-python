@@ -49,28 +49,6 @@ def generate():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-```
 
-# ### Key changes:
-# - Uses `@app.after_request` — applies CORS to **every** response automatically
-# - `Access-Control-Allow-Origin: *` — allows **all** origins (safest fix)
-# - Added a `GET` route so you can test in browser directly
-# - No dependency on `flask-cors` library
-
-# ---
-
-# ## Step 4 — Also update `requirements.txt`
-
-# Remove `flask-cors` since we no longer need it:
-# ```
-# flask
-# reportlab
-# ```
-
-# ---
-
-# ## Step 5 — Verify it worked
-
-# After Render redeploys, open this in your browser:
 # ```
 # https://vip-pdf-generator.onrender.com/generate
