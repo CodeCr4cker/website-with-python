@@ -4,19 +4,27 @@ from vip_pdf_generator import generate_vip_pdf
 import tempfile, os
 
 app = Flask(__name__)
-CORS(app)  # allows your GitHub Pages frontend to call this API
 
-@app.route("/generate", methods=["POST"])
+# ✅ THIS IS THE FIX — explicitly allow your GitHub Pages domain
+CORS(app, origins=["https://codecr4cker.github.io"])
+
+@app.route("/generate", methods=["POST", "OPTIONS"])
 def generate():
+    # Handle preflight OPTIONS request
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        response.headers["Access-Control-Allow-Origin"] = "https://codecr4cker.github.io"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        return response
+
     data = request.json
 
-    # Pull content from the request
     title        = data.get("title", "VIP Guide")
     subtitle     = data.get("subtitle", "")
     footer_label = data.get("footer_label", "EXCLUSIVE VIP GUIDE")
     sections     = data.get("sections", [])
 
-    # Generate PDF into a temp file
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         tmp_path = tmp.name
 
@@ -28,15 +36,14 @@ def generate():
         sections     = sections,
     )
 
-    # Send PDF back as a download
     response = send_file(
         tmp_path,
         mimetype="application/pdf",
         as_attachment=True,
         download_name=f"{title[:30].replace(' ', '_')}.pdf"
     )
+    response.headers["Access-Control-Allow-Origin"] = "https://codecr4cker.github.io"
 
-    # Clean up temp file after sending
     @response.call_on_close
     def cleanup():
         os.unlink(tmp_path)
@@ -44,4 +51,5 @@ def generate():
     return response
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
