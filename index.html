@@ -74,35 +74,3 @@ Use keyboard shortcuts to save time.</textarea>
   </script>
 </body>
 </html>
-```
-
----
-
-## 🚀 Deploying to Render.com (Free)
-
-1. Push your whole project to a **GitHub repo**
-2. Go to [render.com](https://render.com) → **New Web Service**
-3. Connect your GitHub repo
-4. Set these settings:
-
-| Setting | Value |
-|---------|-------|
-| Root Directory | `backend` |
-| Build Command | `pip install -r requirements.txt` |
-| Start Command | `python app.py` |
-
-5. Copy the URL Render gives you (e.g. `https://your-app.onrender.com`)
-6. Paste it into `index.html` where it says `API_URL`
-7. Host `index.html` on **GitHub Pages** (repo Settings → Pages → Deploy from `frontend/` folder)
-
----
-
-## 🔁 Full Flow Summary
-```
-User fills form on GitHub Pages
-        ↓
-JavaScript sends POST to Render.com/generate
-        ↓
-Flask runs vip_pdf_generator.py
-        ↓
-PDF is returned as download to user's browser
