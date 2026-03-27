@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VIP PDF Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px;
+           margin: 40px auto; padding: 20px; background: #111; color: #f5e6b8; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0 16px;
+                      background: #222; color: #fff; border: 1px solid #c9a84c;
+                      border-radius: 6px; font-size: 14px; }
+    button { background: #c9a84c; color: #111; border: none; padding: 14px 30px;
+             font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #f5e6b8; }
+    label { font-weight: bold; color: #c9a84c; }
+    h1 { text-align: center; color: #c9a84c; }
+  </style>
+</head>
+<body>
+  <h1>✦ VIP PDF Generator ✦</h1>
+
+  <label>Title</label>
+  <input id="title" value="VIP GUIDE: My Topic" />
+
+  <label>Subtitle</label>
+  <input id="subtitle" value="Step-by-Step Instructions" />
+
+  <label>Steps (one per line)</label>
+  <textarea id="steps" rows="6">Open the application.
+Configure the settings.
+Save and restart.</textarea>
+
+  <label>Tips (one per line)</label>
+  <textarea id="tips" rows="4">Always back up your files first.
+Use keyboard shortcuts to save time.</textarea>
+
+  <button onclick="generatePDF()">⬇ Generate VIP PDF</button>
+
+  <script>
+    // 🔁 Replace this URL with your actual Render.com backend URL after deploying
+    const API_URL = "https://your-app-name.onrender.com/generate";
+
+    async function generatePDF() {
+      const title    = document.getElementById("title").value;
+      const subtitle = document.getElementById("subtitle").value;
+      const steps    = document.getElementById("steps").value
+                         .split("\n").filter(s => s.trim());
+      const tips     = document.getElementById("tips").value
+                         .split("\n").filter(t => t.trim());
+
+      const payload = {
+        title,
+        subtitle,
+        footer_label: "EXCLUSIVE VIP GUIDE · CONFIDENTIAL",
+        sections: [
+          { heading: "Instructions", type: "steps", content: steps },
+          { heading: "Pro Tips",     type: "tips",  content: tips  },
+        ]
+      };
+
+      const res  = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = "VIP_Guide.pdf";
+      a.click();
+    }
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 🚀 Deploying to Render.com (Free)
+
+1. Push your whole project to a **GitHub repo**
+2. Go to [render.com](https://render.com) → **New Web Service**
+3. Connect your GitHub repo
+4. Set these settings:
+
+| Setting | Value |
+|---------|-------|
+| Root Directory | `backend` |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `python app.py` |
+
+5. Copy the URL Render gives you (e.g. `https://your-app.onrender.com`)
+6. Paste it into `index.html` where it says `API_URL`
+7. Host `index.html` on **GitHub Pages** (repo Settings → Pages → Deploy from `frontend/` folder)
+
+---
+
+## 🔁 Full Flow Summary
+```
+User fills form on GitHub Pages
+        ↓
+JavaScript sends POST to Render.com/generate
+        ↓
+Flask runs vip_pdf_generator.py
+        ↓
+PDF is returned as download to user's browser
